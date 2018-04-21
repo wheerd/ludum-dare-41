@@ -16,6 +16,10 @@ namespace BeepBox
 		public int EndTick {
 			get { return points [1].tick; }
 		}
+
+		public int Length {
+			get { return points [1].tick - points [0].tick; }
+		}
 	}
 
 }
