@@ -19,6 +19,8 @@ public class BeatMachine : MonoBehaviour
 
 	public float neededPercent = 0.5f;
 
+	public float TimeToWait = 2f;
+
 	private double _secPerBeat;
 	private double _startDspTime;
 	private double _currentTimeOffset;
@@ -47,9 +49,6 @@ public class BeatMachine : MonoBehaviour
 		pitchIndex = GetPitchIndex(_pitches);
 
 		_secPerBeat = 60d / _beats.beatsPerMinute;
-		_startDspTime = (float)AudioSettings.dspTime;
-
-		GetComponent<AudioSource> ().Play ();
 
 		_noteBars = new NoteBarBehaviour[_pitches.Count];
 		_panelHeight = 0;
@@ -68,6 +67,10 @@ public class BeatMachine : MonoBehaviour
 		panel.GetComponent<RectTransform> ().sizeDelta = new Vector2 (0, _panelHeight);
 
 		SpawnBuildings ();
+
+		_startDspTime = (float)AudioSettings.dspTime + TimeToWait;
+
+		StartCoroutine (WaitAndPlaySong());
 	}
 
 	private SimpleNote[] GetNotesFromChannel (Channel channel)
@@ -113,6 +116,7 @@ public class BeatMachine : MonoBehaviour
 
 	private static int GetNoteWorth (int length)
 	{
+		return 1;
 		switch (length) {
 		case 1:
 			return 4;
@@ -168,6 +172,13 @@ public class BeatMachine : MonoBehaviour
 
 			_noteIndex++;
 		}
+	}
+
+	IEnumerator WaitAndPlaySong() {
+		yield return new WaitForSecondsRealtime (TimeToWait);
+		_startDspTime = (float)AudioSettings.dspTime;
+
+		GetComponent<AudioSource> ().Play ();
 	}
 }
 
