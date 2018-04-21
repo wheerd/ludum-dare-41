@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class BuildingBehaviour : MonoBehaviour {
 
@@ -24,8 +25,9 @@ public class BuildingBehaviour : MonoBehaviour {
 
 	public bool IsComplete { get { return _maxPoints == _points; } }
 
+	public Func<int> OnHit;
+
 	void Start () {
-		SetBuildingType(Random.Range (0, BuildingSprites.Length));
 		UpdatePointSprite ();
 		UpdateMaxPointSprite ();
 	}
@@ -55,6 +57,10 @@ public class BuildingBehaviour : MonoBehaviour {
 	}
 
 	public void SetPoints(int points) {
+		if (points > _maxPoints) {
+			points = _maxPoints;
+		}
+
 		_points = points;
 		UpdatePointSprite ();
 	}
@@ -66,6 +72,7 @@ public class BuildingBehaviour : MonoBehaviour {
 	}
 
 	void OnMouseDown() {
-		SetPoints ((_points + 1) % (_maxPoints + 1));
+		var points = OnHit ();
+		SetPoints (_points + points);
 	}
 }

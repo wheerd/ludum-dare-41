@@ -8,6 +8,7 @@ public class NoteBehaviour : MonoBehaviour {
 	public float BeatOffset;
 	public int Pitch;
 	public float Length;
+	public int Worth;
 
 	BeatMachine _beatMachine;
 	float _beatWidth;
@@ -16,10 +17,11 @@ public class NoteBehaviour : MonoBehaviour {
 	Image _image;
 	private bool _started = false;
 
-	public delegate void NoteAction();
+	public delegate void NoteStart(int value);
+	public delegate void NoteEnd();
 
-	public event NoteAction OnStart;
-	public event NoteAction OnEnd;
+	public event NoteStart OnStart;
+	public event NoteEnd OnEnd;
 
 
 	void Start () {
@@ -43,7 +45,7 @@ public class NoteBehaviour : MonoBehaviour {
 
 		if (BeatOffset < _beatMachine.currentBeatPosition && ! _started) {
 			_started = true;
-			OnStart ();
+			OnStart (Worth);
 		}
 
 		if (BeatOffset + Length < _beatMachine.currentBeatPosition) {

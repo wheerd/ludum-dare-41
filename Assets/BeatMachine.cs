@@ -101,15 +101,17 @@ public class BeatMachine : MonoBehaviour
 	private SimpleNote GetNote (Note note, int offset)
 	{
 		var noteOffset = (note.StartTick + offset * _beats.ticksPerBeat * _beats.beatsPerBar) / (double)_beats.ticksPerBeat;
+		var length = note.EndTick - note.StartTick;
 
 		return new SimpleNote {
 			pitch = note.pitches [0],
 			offset = noteOffset,
-			length = (note.EndTick - note.StartTick) / (double)_beats.ticksPerBeat
+			length = length / (double)_beats.ticksPerBeat,
+			worth = GetNoteWorth(length)
 		};
 	}
 
-	private int GetNoteWorth (int length)
+	private static int GetNoteWorth (int length)
 	{
 		switch (length) {
 		case 1:
@@ -146,10 +148,11 @@ public class BeatMachine : MonoBehaviour
 				behaviour.SetBuildingType (pitch);
 				behaviour.SetPoints (0);
 				behaviour.SetMaxPoints (4);
+
+				behaviour.OnHit = _noteBars [pitch].Hit;
 			}
 		}
 	}
-
 
 	void Update ()
 	{
@@ -160,7 +163,7 @@ public class BeatMachine : MonoBehaviour
 			var note = _notes [_noteIndex];
 			int index;
 			if (pitchIndex.TryGetValue(note.pitch, out index)) {
-				_noteBars[index].AddNote((float)note.offset, (float)note.length);
+				_noteBars[index].AddNote((float)note.offset, (float)note.length, note.worth);
 			}
 
 			_noteIndex++;
@@ -173,4 +176,5 @@ class SimpleNote
 	public int pitch;
 	public double offset;
 	public double length;
+	public int worth;
 }
