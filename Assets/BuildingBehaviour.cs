@@ -17,6 +17,8 @@ public class BuildingBehaviour : MonoBehaviour {
 
 	public GameObject backgroundObject;
 
+	public GameObject resultTextPrefab;
+
 	private int _buildingType;
 
 	private int _points = 3;
@@ -60,6 +62,9 @@ public class BuildingBehaviour : MonoBehaviour {
 		if (points > _maxPoints) {
 			points = _maxPoints;
 		}
+		if (points < 0) {
+			points = 0;
+		}
 
 		_points = points;
 		UpdatePointSprite ();
@@ -72,7 +77,21 @@ public class BuildingBehaviour : MonoBehaviour {
 	}
 
 	void OnMouseDown() {
+		if (IsComplete)
+			return;
+
 		var points = OnHit ();
+
+		var obj = Instantiate (resultTextPrefab, transform);
+		var resultText = obj.GetComponent<ResultTextBehaviour> ();
+
+		if (points == 0) {
+			points = -1;
+			resultText.IsSuccess = false;
+		} else {
+			resultText.IsSuccess = true;
+		}
+
 		SetPoints (_points + points);
 	}
 }

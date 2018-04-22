@@ -189,6 +189,8 @@ MonoBehaviour:
   buildingObject: {fileID: 1771594915405830}
   pointObject: {fileID: 1041193089830944}
   backgroundObject: {fileID: 1628779783676040}
+  resultTextPrefab: {fileID: 1004582187895206, guid: 75b81b843f2f58e4d9bdd16435e5611b,
+    type: 2}
 --- !u!212 &212003455643237080
 SpriteRenderer:
   m_ObjectHideFlags: 1
