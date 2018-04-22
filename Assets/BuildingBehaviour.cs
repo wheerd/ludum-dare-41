@@ -29,6 +29,10 @@ public class BuildingBehaviour : MonoBehaviour {
 
 	public Func<int> OnHit;
 
+	public delegate void Completion();
+
+	public event Completion OnComplete;
+
 	void Start () {
 		UpdatePointSprite ();
 		UpdateMaxPointSprite ();
@@ -93,5 +97,9 @@ public class BuildingBehaviour : MonoBehaviour {
 		}
 
 		SetPoints (_points + points);
+
+		if (IsComplete) {
+			OnComplete ();
+		}
 	}
 }

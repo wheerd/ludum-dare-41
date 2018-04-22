@@ -15,6 +15,10 @@ public class BeatMachine : MonoBehaviour
 
 	public GameObject panel;
 
+	public GameObject winText;
+
+	public GameObject lostText;
+
 	public int beatsToShow = 8;
 
 	public float neededPercent = 0.5f;
@@ -39,6 +43,12 @@ public class BeatMachine : MonoBehaviour
 
 	float _panelHeight;
 
+	int _totalBuildingCount;
+
+	int _completedBuildingCount;
+
+	float _songLengthInBeats;
+
 	void Start ()
 	{
 		_beats = JsonUtility.FromJson<BeepBoxFile> (beatsFile.text);
@@ -46,9 +56,12 @@ public class BeatMachine : MonoBehaviour
 		_notes = GetNotesFromChannel (_beats.channels [1]);
 		_pitches = GetPitches (_beats.channels [1]);
 
-		pitchIndex = GetPitchIndex(_pitches);
+		_totalBuildingCount = _pitches.Values.Sum ();
+
+		pitchIndex = GetPitchIndex (_pitches);
 
 		_secPerBeat = 60d / _beats.beatsPerMinute;
+		_songLengthInBeats = _beats.loopBars * _beats.beatsPerBar;
 
 		_noteBars = new NoteBarBehaviour[_pitches.Count];
 		_panelHeight = 0;
@@ -60,7 +73,7 @@ public class BeatMachine : MonoBehaviour
 
 			_panelHeight += trans.rect.height;
 
-			_noteBars[i] = obj.GetComponent<NoteBarBehaviour> ();
+			_noteBars [i] = obj.GetComponent<NoteBarBehaviour> ();
 			_noteBars [i].SetBuildingType (i);
 		}
 
@@ -70,7 +83,7 @@ public class BeatMachine : MonoBehaviour
 
 		_startDspTime = (float)AudioSettings.dspTime + TimeToWait;
 
-		StartCoroutine (WaitAndPlaySong());
+		StartCoroutine (WaitAndPlaySong ());
 	}
 
 	private SimpleNote[] GetNotesFromChannel (Channel channel)
@@ -96,8 +109,8 @@ public class BeatMachine : MonoBehaviour
 		return channel.sequence.Take (_beats.loopBars)
 			.SelectMany (s => channel.patterns [s - 1].notes)
 			.GroupBy (n => n.pitches [0])
-			.Select(g => new { g.Key, Count = GetNumberOfBuildingsForNotes(g) })
-			.Where( g => g.Count > 0)
+			.Select (g => new { g.Key, Count = GetNumberOfBuildingsForNotes (g) })
+			.Where (g => g.Count > 0)
 			.ToDictionary (g => g.Key, g => g.Count);
 	}
 
@@ -110,7 +123,7 @@ public class BeatMachine : MonoBehaviour
 			pitch = note.pitches [0],
 			offset = noteOffset,
 			length = length / (double)_beats.ticksPerBeat,
-			worth = GetNoteWorth(length)
+			worth = GetNoteWorth (length)
 		};
 	}
 
@@ -130,14 +143,13 @@ public class BeatMachine : MonoBehaviour
 		}
 	}
 
-	void SpawnBuildings() {
-		var camera = Camera.main.GetComponent<Camera>();
-		var panelBottom = camera.ScreenToWorldPoint(new Vector3(0, Screen.height/2 - _panelHeight, 0)).y;
-		float screenAspect = (float)Screen.width / (float)Screen.height;
-		float cameraHeight = camera.orthographicSize * 2;
-         Bounds bounds = new Bounds(
-			camera.transform.position,
-				new Vector3(cameraHeight * screenAspect, cameraHeight, 0));
+	void SpawnBuildings ()
+	{
+		var camera = Camera.main.GetComponent<Camera> ();
+		var panelBottom = camera.ScreenToWorldPoint (new Vector3 (0, Screen.height / 2 - _panelHeight, 0)).y;
+		var screenAspect = (float)Screen.width / (float)Screen.height;
+		var cameraHeight = camera.orthographicSize * 2;
+		var bounds = new Bounds (camera.transform.position, new Vector3 (cameraHeight * screenAspect, cameraHeight, 0));
 
 		bounds.max = new Vector3 (bounds.max.x, bounds.max.y + panelBottom, 0);
 		bounds.Expand (-0.5f);
@@ -154,6 +166,7 @@ public class BeatMachine : MonoBehaviour
 				behaviour.SetMaxPoints (4);
 
 				behaviour.OnHit = _noteBars [pitch].Hit;
+				behaviour.OnComplete += OnBuildingComplete;
 			}
 		}
 	}
@@ -166,19 +179,32 @@ public class BeatMachine : MonoBehaviour
 		while (_noteIndex < _notes.Length && _notes [_noteIndex].offset < currentBeatPosition + beatsToShow) {
 			var note = _notes [_noteIndex];
 			int index;
-			if (pitchIndex.TryGetValue(note.pitch, out index)) {
-				_noteBars[index].AddNote((float)note.offset, (float)note.length, note.worth);
+			if (pitchIndex.TryGetValue (note.pitch, out index)) {
+				_noteBars [index].AddNote ((float)note.offset, (float)note.length, note.worth);
 			}
 
 			_noteIndex++;
 		}
+
+		if (currentBeatPosition > _songLengthInBeats) {
+			lostText.SetActive (true);
+			gameObject.SetActive (false);
+		}
 	}
 
-	IEnumerator WaitAndPlaySong() {
+	IEnumerator WaitAndPlaySong ()
+	{
 		yield return new WaitForSecondsRealtime (TimeToWait);
 		_startDspTime = (float)AudioSettings.dspTime;
 
 		GetComponent<AudioSource> ().Play ();
+	}
+
+	public void OnBuildingComplete() {
+		if (++_completedBuildingCount == _totalBuildingCount) {
+			winText.SetActive (true);
+			gameObject.SetActive (false);
+		}
 	}
 }
 

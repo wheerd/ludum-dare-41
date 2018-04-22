@@ -47,3 +47,6 @@ TagManager:
   - name: Points
     uniqueID: 3836601443
     locked: 0
+  - name: Popup Text
+    uniqueID: 652508885
+    locked: 0
